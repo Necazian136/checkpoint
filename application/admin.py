@@ -1,3 +1,7 @@
 from django.contrib import admin
+from application.models import User, Checkpoint, Plate
 
-# Register your models here.
+
+admin.site.register(User)
+admin.site.register(Checkpoint)
+admin.site.register(Plate)
