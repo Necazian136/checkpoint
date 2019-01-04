@@ -5,6 +5,18 @@
     <title>Main page</title>
 </head>
 <body>
-<h1>My first page</h1>
+<div>
+    {% if not checkpoint %}
+        <h1>Create checkpoint</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+        </form>
+        <small>{{ error }}</small>
+    {% else %}
+        <h3>{{ checkpoint.name }}</h3>
+    {% endif %}
+</div>
 </body>
 </html>

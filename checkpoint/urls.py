@@ -16,11 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from application.src.views.UserAuthorizationView import UserAuthorizationView
-from application.src.views.MainPageView import MainPageView
-
+from application.src.views.CheckpointView import CheckpointView
+from application.src.views.StreamView import StreamView
 
 urlpatterns = [
-    path('', MainPageView.as_view(), name='main'),
+    path('', CheckpointView.as_view(), name='checkpoint'),
     path('login/', UserAuthorizationView.as_view(), name='auth'),
+    path('stream/', StreamView.as_view(), name='stream'),
     path('admin/', admin.site.urls),
 ]

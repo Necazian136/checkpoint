@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from django.views.generic import View
-from application.src.entity.forms import *
+from application.src.forms.AuthorizationForm import AuthorizationForm
 
 
 class UserAuthorizationView(View):
@@ -16,6 +16,7 @@ class UserAuthorizationView(View):
     @staticmethod
     def post(request):
         form = AuthorizationForm(request.POST)
+        error = None
 
         if form.is_valid():
             username = form.cleaned_data['username']
@@ -26,5 +27,9 @@ class UserAuthorizationView(View):
             if user is not None and user.is_active:
                 login(request, user)
                 return redirect('/')
-        # TODO: сделать отправку запроса на главный сервер, с получением обновлений при неудачной авторизации
-        return render(request, "authorization/login.html", {'form': AuthorizationForm(request.POST)})
+            error = 'User is not exists'
+        # TODO: отправлять запрос на сервер с получением юзера
+        return render(request, "authorization/login.html", {
+            'form': AuthorizationForm(request.POST),
+            'error': error
+        })
