@@ -1,1 +1,1 @@
-alert('Static is working');
+
