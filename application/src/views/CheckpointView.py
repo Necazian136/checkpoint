@@ -16,10 +16,10 @@ class CheckpointView(View):
             user = request.user
             try:
                 checkpoint = Checkpoint.objects.get(user=user)
-            # Check if checkpoint is created
+            # check if checkpoint is created
             except ObjectDoesNotExist:
                 return render(request, "main/creation.html", {'form': form})
-            # Check if checkpoint is created
+            # check if checkpoint is created
             if user is not None and user.is_active:
                 return render(request, "main/index.html", {'checkpoint': checkpoint})
         return redirect('login/')
