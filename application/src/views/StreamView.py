@@ -1,6 +1,6 @@
 from django.views.generic import View
 from django.http import StreamingHttpResponse
-import cv2
+import time
 
 
 class StreamView(View):
@@ -12,6 +12,7 @@ class StreamView(View):
 
     def gen(self):
         while True:
+            time.sleep(0.2)
             buf = self.vision.buf
 
             if buf is not None:

@@ -27,7 +27,7 @@ class UserAuthorizationView(View):
             if user is not None and user.is_active:
                 login(request, user)
                 return redirect('/')
-            error = 'User is not exists'
+            error = 'User does not exists!'
         # TODO: отправлять запрос на сервер с получением юзера
         return render(request, "authorization/login.html", {
             'form': AuthorizationForm(request.POST),

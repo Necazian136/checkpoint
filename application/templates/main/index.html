@@ -9,18 +9,8 @@
 </head>
 <body>
 <div>
-    {% if not checkpoint %}
-        <h1>Create checkpoint</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form }}
-            <input type="submit" value="Submit">
-        </form>
-        <small>{{ error }}</small>
-    {% else %}
-        <h3>{{ checkpoint.name }}</h3>
-        <img src="/stream/">
-    {% endif %}
+    <h3>{{ checkpoint.name }}</h3>
+    <img src="/stream/">
 </div>
 </body>
 </html>

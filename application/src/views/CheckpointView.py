@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import View
 
+from django.core.exceptions import ObjectDoesNotExist
 from application.models import Checkpoint, User
 from application.src.forms.CheckpointForm import CheckpointForm
 
@@ -13,9 +14,14 @@ class CheckpointView(View):
 
         if request.user.is_authenticated:
             user = request.user
-            checkpoint = user.checkpoint
+            try:
+                checkpoint = Checkpoint.objects.get(user=user)
+            except ObjectDoesNotExist:
+                return render(request, "main/creation.html", {'form': form})
+
+            plates = checkpoint.plate_set.all()
             if user is not None and user.is_active:
-                return render(request, "main/index.html", {'form': form, 'checkpoint': checkpoint})
+                return render(request, "main/index.html", {'checkpoint': checkpoint, 'plates': plates})
         return redirect('login/')
 
     @staticmethod
@@ -30,7 +36,7 @@ class CheckpointView(View):
 
             # TODO: Сделать отправку запроса на сервер для синхронизации
             # create checkpoint
-            checkpoint = Checkpoint(name=checkpoint_name)
+            checkpoint = Checkpoint(name=checkpoint_name, user=user)
             checkpoint.save()
 
             # add checkpoint in user at database
