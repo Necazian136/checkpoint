@@ -7,13 +7,13 @@ class StreamView(View):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        from checkpoint.wsgi import vision
-        self.vision = vision
+        from checkpoint.wsgi import camera
+        self.camera = camera
 
     def gen(self):
         while True:
             time.sleep(0.2)
-            buf = self.vision.buf
+            buf = self.camera.buf
 
             if buf is not None:
                 yield (b'--frame\r\n'
