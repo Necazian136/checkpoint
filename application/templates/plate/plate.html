@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plates</title>
+</head>
+<body>
+<a href="/">Back</a>
+
+<form method="post">
+    {% csrf_token %}
+    {% for plate in plates %}
+        <input name="plate_{{ plate.id }}" type="checkbox"><span>{{ plate }}</span>
+    {% endfor %}
+    <br>
+    <input type="submit" value="Delete">
+</form>
+<div>
+    <h3>Create new plate:</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit">
+    </form>
+</div>
+</body>
+</html>

@@ -21,7 +21,7 @@ class CheckpointView(View):
                 return render(request, "main/creation.html", {'form': form})
             # check if checkpoint is created
             if user is not None and user.is_active:
-                return render(request, "main/index.html", {'checkpoint': checkpoint})
+                return render(request, "main/main.html", {'checkpoint': checkpoint})
         return redirect('login/')
 
     @staticmethod

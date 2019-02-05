@@ -18,9 +18,11 @@ from django.urls import path
 from application.src.views.UserAuthorizationView import UserAuthorizationView
 from application.src.views.CheckpointView import CheckpointView
 from application.src.views.StreamView import StreamView
+from application.src.views.PlateView import PlateView
 
 urlpatterns = [
     path('', CheckpointView.as_view(), name='checkpoint'),
+    path('plate/', PlateView.as_view(), name='plate'),
     path('login/', UserAuthorizationView.as_view(), name='auth'),
     path('stream/', StreamView.as_view(), name='stream'),
     path('admin/', admin.site.urls),
