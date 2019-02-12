@@ -26,6 +26,24 @@ pip install Pillow
 pip install opencv-python
 ```
 
+Migrations
+```sh
+manage.py makemigrations
+manage.py migrate
+```
+
+Creating user
+```python
+from application.models import User
+
+u = User.objects.create_user(
+    username='Your username',
+    password='Your password',
+    email='Your email'
+)
+u.save()
+```
+
 ### Run Server
 
 To run server write

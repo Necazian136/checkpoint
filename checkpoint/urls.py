@@ -20,12 +20,17 @@ from application.src.controllers import *
 from application.src.views import *
 
 urlpatterns = [
-    path('', CheckpointView.as_view(), name='checkpoint'),
+    path('', CheckpointView.as_view(), name='main'),
     path('plate/', PlateView.as_view(), name='plate'),
-    path('login/', UserAuthorizationView.as_view(), name='auth'),
-    path('logout/', UserAuthorizationView.logout, name='auth'),
+    path('login/', UserAuthorizationView.as_view(), name='login'),
+    path('logout/', UserAuthorizationView.logout, name='logout'),
     path('stream/', StreamView.as_view(), name='stream'),
-    path('api/user/', UserController.as_view(), name='test'),
-    path('api/user/<str:token>/', UserController.as_view(), name='test'),
+
+    path('api/user/', UserController.as_view()),
+    path('api/user/<str:token>/', UserController.as_view()),
+
+    path('api/checkpoint/<str:token>/', CheckpointController.as_view()),
+    path('api/checkpoint/<str:token>/<str:checkpoint>', CheckpointController.as_view()),
+
     path('admin/', admin.site.urls),
 ]

@@ -11,6 +11,11 @@ class User(AbstractUser):
     def is_admin(self):
         return self.admin
 
+    @property
+    def checkpoints(self):
+        checkpoints = Checkpoint.objects.filter(user=self)
+        return checkpoints
+
     def update_token(self):
         h = hashlib.new('ripemd160')
         if self.token is None:
@@ -22,15 +27,24 @@ class User(AbstractUser):
         self.save()
         return self.token
 
-
-def __str__(self):
-    return self.username
+    def __str__(self):
+        return self.username
 
 
 class Checkpoint(models.Model):
     name = models.CharField(max_length=63, null=False, default='Unnamed')
     sync_counter = models.IntegerField(default=0)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    is_active = models.BooleanField(default=False)
+
+    @property
+    def plates(self):
+        return Plate.objects.filter(checkpoint=self)
+
+    def set_active(self):
+        self.objects.all().update(is_active=False)
+        self.is_active = True
+        self.save()
 
     def __str__(self):
         return self.name
