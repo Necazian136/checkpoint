@@ -30,7 +30,8 @@ urlpatterns = [
     path('api/user/<str:token>/', UserController.as_view()),
 
     path('api/checkpoint/<str:token>/', CheckpointController.as_view()),
-    path('api/checkpoint/<str:token>/<str:checkpoint>', CheckpointController.as_view()),
+    path('api/checkpoint/<str:token>/<str:checkpoint>/', CheckpointController.as_view()),
+    path('api/checkpoint/<str:token>/<str:checkpoint>/<int:active>/', CheckpointController.as_view()),
 
     path('admin/', admin.site.urls),
 ]

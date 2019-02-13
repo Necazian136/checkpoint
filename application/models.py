@@ -6,6 +6,7 @@ import hashlib
 class User(AbstractUser):
     admin = models.BooleanField(default=False)
     token = models.CharField(max_length=255, null=True, default=None)
+    sync_counter = models.IntegerField(default=0)
 
     @property
     def is_admin(self):
@@ -27,6 +28,10 @@ class User(AbstractUser):
         self.save()
         return self.token
 
+    def save(self, *args, **kwargs):
+        self.sync_counter += 1
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.username
 
@@ -42,9 +47,13 @@ class Checkpoint(models.Model):
         return Plate.objects.filter(checkpoint=self)
 
     def set_active(self):
-        self.objects.all().update(is_active=False)
+        Checkpoint.objects.all().update(is_active=False)
         self.is_active = True
         self.save()
+
+    def save(self, *args, **kwargs):
+        self.sync_counter += 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

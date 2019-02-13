@@ -74,23 +74,33 @@ class CheckpointManager:
             return True
         return False
 
-    def update_checkpoint(self, checkpoint: Checkpoint, data):
+    def update_checkpoint(self, checkpoint: Checkpoint, name):
         """
         Update name of checkpoint
-        :param data:
+        :param name:
         :param Checkpoint checkpoint:
         :return Checkpoint|None:
         """
 
         if isinstance(checkpoint, Checkpoint):
-            if 'name' in data:
-                checkpoint.name = data['name']
+            checkpoint.name = name
             if self._checkpoint_is_unique(checkpoint):
                 checkpoint.save()
                 self.checkpoint = checkpoint
                 return checkpoint
             raise Exception('Checkpoint with this name already exists')
         return
+
+    def activate(self, checkpoint: Checkpoint):
+        checkpoint.set_active()
+        self.checkpoint = checkpoint
+        return True
+
+    def deactivate(self, checkpoint):
+        checkpoint.is_active = False
+        checkpoint.save()
+        self.checkpoint = checkpoint
+        return True
 
     def delete_checkpoint(self, checkpoint: Checkpoint):
         """
@@ -148,7 +158,8 @@ class UserManager:
             return {
                 'username': user.username,
                 'is_admin': user.is_admin,
-                'token': user.token
+                'token': user.token,
+                'sync_counter': user.sync_counter,
             }
         return
 
@@ -162,7 +173,7 @@ class UserManager:
 
     def get_user_from_request(self, request):
         """
-        Getting user by his token from database
+        Getting user from request
         :param request:
         :return User|None:
         """

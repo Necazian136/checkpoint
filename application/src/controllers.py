@@ -19,7 +19,7 @@ class CheckpointController(View):
         """
         Get checkpoint('s) by user
         /api/checkpoint/<str:token>/ - return all checkpoints
-        /api/checkpoint/<str:token>/<str:checkpoint> - return specific checkpoint
+        /api/checkpoint/<str:token>/<str:checkpoint>/ - return specific checkpoint
         """
         user = None
         checkpoint_name = None
@@ -47,7 +47,7 @@ class CheckpointController(View):
     def post(self, request, **kwargs):
         """
         Create checkpoint
-        /api/checkpoint/<str:token>/<str:checkpoint> - create checkpoint
+        /api/checkpoint/<str:token>/<str:checkpoint>/ - create checkpoint
         """
         user = None
         checkpoint_name = None
@@ -79,10 +79,12 @@ class CheckpointController(View):
     def patch(self, request, **kwargs):
         """
         Update checkpoint name
-        /api/checkpoint/<str:token>/<str:checkpoint> - update checkpoint, parameters should be in query
+        /api/checkpoint/<str:token>/<str:checkpoint>/ - update checkpoint name, parameter should be in body
+        /api/checkpoint/<str:token>/<str:checkpoint>/[0-1] - activate or deactivate checkpoint
         """
         user = None
         checkpoint = None
+        checkpoint_name = None
         patch = QueryDict(request.body)
         result = None
         error = None
@@ -94,8 +96,17 @@ class CheckpointController(View):
             if 'checkpoint' in kwargs:
                 checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
 
-            if isinstance(user, User) and isinstance(checkpoint, Checkpoint):
-                checkpoint = self.checkpoint_manager.update_checkpoint(checkpoint, patch)
+            if 'name' in patch:
+                checkpoint_name = patch['name']
+
+            if 'active' in kwargs:
+                if kwargs['active'] == 0:
+                    result = self.checkpoint_manager.deactivate(checkpoint)
+                elif kwargs['active'] == 1:
+                    result = self.checkpoint_manager.activate(checkpoint)
+
+            elif isinstance(user, User) and checkpoint_name is not None:
+                checkpoint = self.checkpoint_manager.update_checkpoint(checkpoint, checkpoint_name)
                 result = self.checkpoint_manager.serialize(checkpoint)
         except Exception as e:
             error = e.args[0]
@@ -109,6 +120,7 @@ class CheckpointController(View):
     def delete(self, request, **kwargs):
         """
         Delete checkpoint
+        /api/checkpoint/<str:token>/<str:checkpoint>/ - delete checkpoint
         :param request:
         :return:
         """
