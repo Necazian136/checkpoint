@@ -16,16 +16,13 @@ class CheckpointManager:
 
     def get_checkpoint_by_name(self, name, user: User):
         """
-
         :param name:
         :param user:
         :except Exception
         :return:
         """
         try:
-            checkpoint = Checkpoint.objects.get(name=name, user=user)
-            self.checkpoint = checkpoint
-            return checkpoint
+            return Checkpoint.objects.get(name=name, user=user)
         except ObjectDoesNotExist:
             raise Exception('Checkpoint does not exists')
 
@@ -37,14 +34,12 @@ class CheckpointManager:
         """
         self.checkpoint = checkpoint
 
-    def serialize(self, checkpoint: Checkpoint = None):
+    def serialize(self, checkpoint: Checkpoint):
         """
         Return dict from object
         :param checkpoint:Checkpoint
         :return:dict|None
         """
-        if checkpoint is None:
-            checkpoint = self.checkpoint
         if isinstance(checkpoint, Checkpoint):
             return {
                 'name': checkpoint.name,
@@ -62,44 +57,37 @@ class CheckpointManager:
         :return Checkpoint:
         """
         checkpoint = Checkpoint(name=name, user=user)
-        if self._checkpoint_is_unique(checkpoint):
+        if self.__checkpoint_is_unique(checkpoint, user):
             checkpoint.save()
-            self.checkpoint = checkpoint
             return checkpoint
         raise Exception('Checkpoint with this name already exists')
 
     @staticmethod
-    def _checkpoint_is_unique(checkpoint: Checkpoint):
-        if len(Checkpoint.objects.filter(name=checkpoint.name)) == 0:
+    def __checkpoint_is_unique(checkpoint: Checkpoint, user: User):
+        if len(Checkpoint.objects.filter(name=checkpoint.name, user=user)) == 0:
             return True
         return False
 
-    def update_checkpoint(self, checkpoint: Checkpoint, name):
+    def update_checkpoint(self, name, checkpoint: Checkpoint, user: User):
         """
         Update name of checkpoint
         :param name:
         :param Checkpoint checkpoint:
         :return Checkpoint|None:
         """
-
-        if isinstance(checkpoint, Checkpoint):
-            checkpoint.name = name
-            if self._checkpoint_is_unique(checkpoint):
-                checkpoint.save()
-                self.checkpoint = checkpoint
-                return checkpoint
-            raise Exception('Checkpoint with this name already exists')
-        return
+        checkpoint.name = name
+        if self.__checkpoint_is_unique(checkpoint, user):
+            checkpoint.save()
+            return checkpoint
+        raise Exception('Checkpoint with this name already exists')
 
     def activate(self, checkpoint: Checkpoint):
         checkpoint.set_active()
-        self.checkpoint = checkpoint
         return True
 
     def deactivate(self, checkpoint):
         checkpoint.is_active = False
         checkpoint.save()
-        self.checkpoint = checkpoint
         return True
 
     def delete_checkpoint(self, checkpoint: Checkpoint):
@@ -109,7 +97,6 @@ class CheckpointManager:
         :return bool:
         """
         checkpoint.delete()
-        self.checkpoint = None
         return True
 
 
@@ -124,6 +111,36 @@ class PlateManager:
             checkpoint_list.append(self.serialize(plate))
         return checkpoint_list
 
+    def get_plate_by_name(self, name, checkpoint: Checkpoint):
+        try:
+            return Plate.objects.get(name=name, checkpoint=checkpoint)
+        except ObjectDoesNotExist:
+            raise Exception('Plate does not exists')
+
+    def create_plate(self, name, checkpoint: Checkpoint):
+        plate = Plate(name=name, checkpoint=checkpoint)
+        if self.__plate_is_unique(plate, checkpoint):
+            plate.save()
+            return plate
+        raise Exception('Plate already exists')
+
+    def update_plate(self, name, plate: Plate, checkpoint: Checkpoint):
+        plate.name = name
+        if self.__plate_is_unique(plate, checkpoint):
+            plate.save()
+            return plate
+        raise Exception('Plate with this name already exists')
+
+    def delete_plate(self, plate: Plate):
+        plate.delete()
+        return True
+
+    @staticmethod
+    def __plate_is_unique(plate: Plate, checkpoint: Checkpoint):
+        if len(Plate.objects.filter(name=plate.name, checkpoint=checkpoint)) == 0:
+            return True
+        return False
+
     def serialize(self, plate: Plate = None):
         """
         Return dict from object
@@ -134,8 +151,8 @@ class PlateManager:
             plate = self.plate
         if isinstance(plate, Plate):
             return {
+                'name': plate.name,
                 'checkpoint': plate.checkpoint.name,
-                'number': plate.number
             }
         return
 

@@ -60,8 +60,13 @@ class Checkpoint(models.Model):
 
 
 class Plate(models.Model):
-    number = models.CharField(max_length=15, null=False)
+    name = models.CharField(max_length=15, null=False)
     checkpoint = models.ForeignKey(Checkpoint, on_delete=models.CASCADE, null=False)
+    sync_counter = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        self.sync_counter += 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.number
+        return self.name

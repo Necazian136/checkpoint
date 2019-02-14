@@ -8,6 +8,147 @@ from application.src.managers import *
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class PlateController(View):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.user_manager = UserManager()
+        self.checkpoint_manager = CheckpointManager()
+        self.plate_manager = PlateManager()
+
+    def get(self, request, **kwargs):
+        """
+        Get plate('s) by user and checkpoint
+        /api/plate/<str:token>/<str:checkpoint>/ - return all plates of checkpoint
+        /api/plate/<str:token>/<str:checkpoint>/<str:plate>/ - return specific plate
+        """
+        user = None
+        checkpoint = None
+        result = None
+        error = None
+        plate_name = None
+
+        try:
+            if 'token' in kwargs:
+                user = self.user_manager.get_user_by_token(kwargs['token'])
+
+            if 'checkpoint' in kwargs:
+                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+
+            if 'plate' in kwargs:
+                plate_name = kwargs['plate']
+
+            if isinstance(user, User) and isinstance(checkpoint, Checkpoint):
+                if plate_name is None:
+                    result = self.plate_manager.get_plates(checkpoint)
+                else:
+                    plate = self.plate_manager.get_plate_by_name(plate_name, checkpoint)
+                    result = self.plate_manager.serialize(plate)
+        except Exception as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
+
+    def post(self, request, **kwargs):
+        """
+        Create plate
+        /api/plate/<str:token>/<str:checkpoint>/<str:plate>/ - create plate
+        """
+        user = None
+        checkpoint = None
+        result = None
+        error = None
+        plate_name = None
+
+        try:
+            if 'token' in kwargs:
+                user = self.user_manager.get_user_by_token(kwargs['token'])
+
+            if 'checkpoint' in kwargs:
+                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+
+            if 'plate' in kwargs:
+                plate_name = kwargs['plate']
+
+            if isinstance(user, User) and isinstance(checkpoint, Checkpoint) and plate_name is not None:
+                plate = self.plate_manager.create_plate(plate_name, checkpoint)
+                result = self.plate_manager.serialize(plate)
+        except Exception as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
+
+    # TODO: получение номерного знака с сервера
+    def put(self, request):
+        return JsonResponse({})
+
+    def patch(self, request, **kwargs):
+        """
+        Update plate name
+        /api/checkpoint/<str:token>/<str:checkpoint>/<str:plate>/ - parameter should be in request
+        """
+        user = None
+        checkpoint = None
+        plate = None
+        plate_name = None
+        patch = QueryDict(request.body)
+        result = None
+        error = None
+
+        try:
+            if 'token' in kwargs:
+                user = self.user_manager.get_user_by_token(kwargs['token'])
+
+            if 'checkpoint' in kwargs:
+                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+
+            if 'plate' in kwargs:
+                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], checkpoint)
+
+            if 'name' in patch:
+                plate_name = patch['name']
+
+            if isinstance(user, User) and isinstance(checkpoint, Checkpoint):
+                plate = self.plate_manager.update_plate(plate_name, plate, checkpoint)
+                result = self.plate_manager.serialize(plate)
+
+        except Exception as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
+
+    def delete(self, request, **kwargs):
+        """
+        Delete plate
+        /api/checkpoint/<str:token>/<str:checkpoint>/<str:plate>/ - delete plate
+        :param request:
+        :return:
+        """
+        user = None
+        checkpoint = None
+        plate = None
+        result = None
+        error = None
+
+        try:
+            if 'token' in kwargs and kwargs['token'] and kwargs['token'] != '':
+                user = self.user_manager.get_user_by_token(kwargs['token'])
+
+            if 'checkpoint' in kwargs:
+                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+
+            if 'plate' in kwargs:
+                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], checkpoint)
+
+            result = self.plate_manager.delete_plate(plate)
+
+        except Exception as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class CheckpointController(View):
 
     def __init__(self, **kwargs):
@@ -106,7 +247,7 @@ class CheckpointController(View):
                     result = self.checkpoint_manager.activate(checkpoint)
 
             elif isinstance(user, User) and checkpoint_name is not None:
-                checkpoint = self.checkpoint_manager.update_checkpoint(checkpoint, checkpoint_name)
+                checkpoint = self.checkpoint_manager.update_checkpoint(checkpoint_name, checkpoint)
                 result = self.checkpoint_manager.serialize(checkpoint)
         except Exception as e:
             error = e.args[0]
@@ -142,21 +283,6 @@ class CheckpointController(View):
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class PlateController(View):
-    def get(self, request):
-        return JsonResponse({})
-
-    def post(self, request):
-        return JsonResponse({})
-
-    def put(self, request):
-        return JsonResponse({})
-
-    def delete(self, request):
-        return JsonResponse({})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -210,8 +336,4 @@ class UserController(View):
 
     # TODO: Обновление пароля
     def patch(self, request):
-        return JsonResponse({})
-
-    # TODO: Удаление пользователя по его токену
-    def delete(self, request):
         return JsonResponse({})

@@ -1,3 +1,5 @@
+.idea
 /venv/*
 /application/migrations/*
 !/application/migrations/__init__.py
+db.sqlite3
