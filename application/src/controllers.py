@@ -1,8 +1,12 @@
+from json import JSONDecodeError
+
+from django.contrib.auth import login
 from django.http import QueryDict
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.utils.decorators import method_decorator
+import json
 
 from application.src.managers import *
 
@@ -13,38 +17,41 @@ class PlateController(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.user_manager = UserManager()
-        self.checkpoint_manager = CheckpointManager()
+        self.kit_manager = KitLicensePlateManager()
         self.plate_manager = PlateManager()
 
     def get(self, request, **kwargs):
         """
-        Get plate('s) by user and checkpoint
-        /api/plate/<str:token>/<str:checkpoint>/ - return all plates of checkpoint
-        /api/plate/<str:token>/<str:checkpoint>/<str:plate>/ - return specific plate
+        Get plate('s) by user and kit
+        /api/plate/<str:kit>/ - return all plates of kit
+        /api/plate/<str:kit>/<str:plate>/ - return specific plate
         """
-        user = None
-        checkpoint = None
         result = None
         error = None
-        plate_name = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit = None
+            plate_name = None
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
 
             if 'plate' in kwargs:
-                plate_name = kwargs['plate']
+                plate_name = kwargs['plate'].replace(' ', '').upper()
 
-            if isinstance(user, User) and isinstance(checkpoint, Checkpoint):
+            if isinstance(user, User) and isinstance(kit, Kit):
                 if plate_name is None:
-                    result = self.plate_manager.get_plates(checkpoint)
+                    result = self.plate_manager.get_plates(kit)
                 else:
-                    plate = self.plate_manager.get_plate_by_name(plate_name, checkpoint)
+                    plate = self.plate_manager.get_plate_by_name(plate_name, kit)
                     result = self.plate_manager.serialize(plate)
-        except Exception as e:
+
+            if result is None:
+                error = 'request is not valid'
+        except Exception or ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
@@ -52,28 +59,31 @@ class PlateController(View):
     def post(self, request, **kwargs):
         """
         Create plate
-        /api/plate/<str:token>/<str:checkpoint>/<str:plate>/ - create plate
+        /api/plate/<str:kit>/<str:plate>/ - create plate
         """
-        user = None
-        checkpoint = None
         result = None
         error = None
-        plate_name = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            plate_name = None
+            user = None
+            kit = None
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
 
             if 'plate' in kwargs:
-                plate_name = kwargs['plate']
+                plate_name = kwargs['plate'].replace(' ', '').upper()
 
-            if isinstance(user, User) and isinstance(checkpoint, Checkpoint) and plate_name is not None:
-                plate = self.plate_manager.create_plate(plate_name, checkpoint)
+            if isinstance(user, User) and isinstance(kit, Kit) and plate_name is not None:
+                plate = self.plate_manager.create_plate(plate_name, kit)
                 result = self.plate_manager.serialize(plate)
-        except Exception as e:
+
+            if result is None:
+                error = 'request is not valid'
+        except Exception or ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
@@ -85,34 +95,40 @@ class PlateController(View):
     def patch(self, request, **kwargs):
         """
         Update plate name
-        /api/checkpoint/<str:token>/<str:checkpoint>/<str:plate>/ - parameter should be in request
+        /api/kit/<str:kit>/<str:plate>/ - parameter should be in request
         """
-        user = None
-        checkpoint = None
-        plate = None
-        plate_name = None
-        patch = QueryDict(request.body)
         result = None
         error = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit = None
+            plate = None
+            plate_name = None
+            try:
+                patch = json.loads(request.body)
+            except JSONDecodeError:
+                patch = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
+
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
 
             if 'plate' in kwargs:
-                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], checkpoint)
+                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], kit)
 
-            if 'name' in patch:
-                plate_name = patch['name']
+            if 'plate_name' in patch:
+                plate_name = patch['plate_name'].replace(' ', '').upper()
 
-            if isinstance(user, User) and isinstance(checkpoint, Checkpoint):
-                plate = self.plate_manager.update_plate(plate_name, plate, checkpoint)
+            if isinstance(user, User) and isinstance(kit, Kit):
+                plate = self.plate_manager.update_plate(plate_name, plate, kit)
                 result = self.plate_manager.serialize(plate)
 
-        except Exception as e:
+            if result is None:
+                error = 'request is not valid'
+        except Exception or ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
@@ -120,94 +136,110 @@ class PlateController(View):
     def delete(self, request, **kwargs):
         """
         Delete plate
-        /api/checkpoint/<str:token>/<str:checkpoint>/<str:plate>/ - delete plate
+        /api/kit/<str:kit>/<str:plate>/ - delete plate
         :param request:
         :return:
         """
-        user = None
-        checkpoint = None
-        plate = None
         result = None
         error = None
 
         try:
-            if 'token' in kwargs and kwargs['token'] and kwargs['token'] != '':
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit = None
+            plate = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
+
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
 
             if 'plate' in kwargs:
-                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], checkpoint)
+                plate = self.plate_manager.get_plate_by_name(kwargs['plate'], kit)
 
             result = self.plate_manager.delete_plate(plate)
 
-        except Exception as e:
+            if result is None:
+                error = 'request is not valid'
+        except Exception or ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class CheckpointController(View):
+class KitController(View):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.user_manager = UserManager()
-        self.checkpoint_manager = CheckpointManager()
+        self.kit_manager = KitLicensePlateManager()
 
     def get(self, request, **kwargs):
         """
-        Get checkpoint('s) by user
-        /api/checkpoint/<str:token>/ - return all checkpoints
-        /api/checkpoint/<str:token>/<str:checkpoint>/ - return specific checkpoint
+        Get kit('s) by user
+        /api/kit/ - return all kits
+        /api/kit/<str:kit>/ - return specific kit
         """
-        user = None
-        checkpoint_name = None
         result = None
         error = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kits_name = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint_name = kwargs['checkpoint']
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
+
+            if 'kit' in kwargs:
+                kits_name = kwargs['kit']
 
             if isinstance(user, User):
-                if checkpoint_name is None:
-                    result = self.checkpoint_manager.get_checkpoints(user)
+                if kits_name is None:
+                    result = self.kit_manager.get_kits(user)
                 else:
-                    checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
-                    result = self.checkpoint_manager.serialize(checkpoint)
-        except Exception as e:
+                    kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
+                    result = self.kit_manager.serialize(kit)
+
+            if result is None:
+                error = 'request is not valid'
+        except ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
 
     def post(self, request, **kwargs):
         """
-        Create checkpoint
-        /api/checkpoint/<str:token>/<str:checkpoint>/ - create checkpoint
+        Create kit
+        /api/kit/<str:kit>/<int:active>/ - create kit
         """
-        user = None
-        checkpoint_name = None
         result = None
         error = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit_name = None
+            kit = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint_name = kwargs['checkpoint']
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
 
-            if isinstance(user, User) and checkpoint_name is not None:
-                checkpoint = self.checkpoint_manager.create_checkpoint(checkpoint_name, user)
-                result = self.checkpoint_manager.serialize(checkpoint)
-            else:
-                error = 'Wrong params'
-        except Exception as e:
+            if 'kit' in kwargs:
+                kit_name = kwargs['kit']
+
+            if isinstance(user, User) and kit_name is not None:
+                kit = self.kit_manager.create_kit(kit_name, user)
+                result = self.kit_manager.serialize(kit)
+
+            if 'active' in kwargs and isinstance(kit, Kit):
+                if kwargs['active'] == 0:
+                    result = self.kit_manager.deactivate(kit)
+                elif kwargs['active'] == 1:
+                    result = self.kit_manager.activate(kit)
+
+            if result is None:
+                error = 'request is not valid'
+        except ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
@@ -219,67 +251,73 @@ class CheckpointController(View):
 
     def patch(self, request, **kwargs):
         """
-        Update checkpoint name
-        /api/checkpoint/<str:token>/<str:checkpoint>/ - update checkpoint name, parameter should be in body
-        /api/checkpoint/<str:token>/<str:checkpoint>/[0-1] - activate or deactivate checkpoint
+        Update kit name
+        /api/kit/<str:kit>/ - update kit name, parameter should be in body
+        /api/kit/<str:kit>/[0-1] - activate or deactivate kit
         """
-        user = None
-        checkpoint = None
-        checkpoint_name = None
-        patch = QueryDict(request.body)
         result = None
         error = None
 
         try:
-            if 'token' in kwargs:
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit = None
+            kit_name = None
+            try:
+                patch = json.loads(request.body)
+            except JSONDecodeError:
+                patch = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
 
-            if 'name' in patch:
-                checkpoint_name = patch['name']
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
+
+            if patch is not None and 'kit_name' in patch:
+                kit_name = patch['kit_name']
 
             if 'active' in kwargs:
                 if kwargs['active'] == 0:
-                    result = self.checkpoint_manager.deactivate(checkpoint)
+                    result = self.kit_manager.deactivate(kit)
                 elif kwargs['active'] == 1:
-                    result = self.checkpoint_manager.activate(checkpoint)
+                    result = self.kit_manager.activate(kit)
 
-            elif isinstance(user, User) and checkpoint_name is not None:
-                checkpoint = self.checkpoint_manager.update_checkpoint(checkpoint_name, checkpoint)
-                result = self.checkpoint_manager.serialize(checkpoint)
-        except Exception as e:
+            if isinstance(user, User) and kit_name is not None and kit_name != kit.name:
+                kit = self.kit_manager.update_kit(kit_name, kit, user)
+                result = self.kit_manager.serialize(kit)
+
+            if result is None:
+                error = 'request is not valid'
+        except ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
 
-    # TODO спорный вопрос надо ли синхронизировать удаление
-    # + того что синхронизация не нужна то что пользователь в любой момент сможет восстановить номера
-    # + синхронизации только в том что не придётся удалять номера на сервере, но т.к. сервер ничего не распознаёт
-    # то можно реализовать на сервере статус Используется/Не используется
     def delete(self, request, **kwargs):
         """
-        Delete checkpoint
-        /api/checkpoint/<str:token>/<str:checkpoint>/ - delete checkpoint
+        Delete kit
+        /api/kit/<str:kit>/ - delete kit
         :param request:
         :return:
         """
-        user = None
-        checkpoint = None
         result = None
         error = None
 
         try:
-            if 'token' in kwargs and kwargs['token'] and kwargs['token'] != '':
-                user = self.user_manager.get_user_by_token(kwargs['token'])
+            user = None
+            kit = None
 
-            if 'checkpoint' in kwargs:
-                checkpoint = self.checkpoint_manager.get_checkpoint_by_name(kwargs['checkpoint'], user)
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
 
-            result = self.checkpoint_manager.delete_checkpoint(checkpoint)
+            if 'kit' in kwargs:
+                kit = self.kit_manager.get_kit_by_name(kwargs['kit'], user)
 
-        except Exception as e:
+            result = self.kit_manager.delete_kit(kit)
+
+            if result is None:
+                error = 'request is not valid'
+        except ObjectDoesNotExist as e:
             error = e.args[0]
 
         return JsonResponse({'result': result, 'error': error})
@@ -291,41 +329,61 @@ class UserController(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.user_manager = UserManager()
-        self.checkpoint_manager = CheckpointManager()
+        self.kit_manager = KitLicensePlateManager()
 
-    def get(self, request, **kwargs):
+    def get(self, request):
         """
-        Get user by token or request
+        Get user from request
         """
-        user = None
-        if 'token' not in kwargs and request.user is not None and request.user.is_active:
-            user = self.user_manager.get_user_from_request(request)
-        if 'token' in kwargs and kwargs['token'] and kwargs['token'] != '':
-            user = self.user_manager.get_user_by_token(kwargs['token'])
+        result = None
+        error = None
 
-        return JsonResponse({'result': self.user_manager.serialize(user)})
+        try:
+            user = None
+            if request.user is not None and request.user.is_active:
+                user = self.user_manager.get_user_from_request(request)
+
+            result = self.user_manager.serialize(user)
+
+        except ObjectDoesNotExist as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
 
     def post(self, request):
         """
         Authorize user by username and password
         """
-        username = None
-        password = None
-        user = None
+        result = None
+        error = None
 
-        if 'username' in request.POST:
-            username = request.POST.get('username')
-        if 'username' in request.POST:
-            password = request.POST.get('password')
+        try:
+            try:
+                post = json.loads(request.body)
+            except JSONDecodeError:
+                post = None
+            username = None
+            password = None
+            user = None
 
-        if username is not None and password is not None:
-            self.user_manager.get_user_by_username_and_password(
-                username=username,
-                password=password
-            )
-            user = self.user_manager.generate_user_token()
+            if 'username' in post:
+                username = post['username']
+            if 'password' in post:
+                password = post['password']
 
-        return JsonResponse({'result': self.user_manager.serialize(user)})
+            if username is not None and password is not None:
+                user = self.user_manager.get_user_by_username_and_password(
+                    username=username,
+                    password=password
+                )
+                login(request, user)
+            result = self.user_manager.serialize(user)
+            if result is None:
+                error = 'request is not valid'
+        except ObjectDoesNotExist as e:
+            error = e.args[0]
+
+        return JsonResponse({'result': result, 'error': error})
 
     # TODO: Получение пользователя с сервера
     def put(self, request):

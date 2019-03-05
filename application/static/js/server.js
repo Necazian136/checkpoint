@@ -1,10 +1,9 @@
-function sendRequest(data, functionName, url, method) {
+function sendRequest(data, url, method, functionName) {
     $.ajax({
         type: method,
         url: url,
         dataType: 'json',
-        contentType: false,
-        processData: false,
+        contentType: 'application/json',
         data: data
     }).done(function (callback) {
         functionName(callback);

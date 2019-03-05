@@ -1,5 +1,5 @@
 """
-WSGI config for checkpoint project.
+WSGI config for kit project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

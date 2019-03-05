@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>SignIn</title>
+    {% load static %}
+    {% include "blocks/head.html" %}
+    <script src="{% static 'js/authorization/login.js' %}"></script>
+
 </head>
 <body>
 <div>
-    <form method="post">
-        {% csrf_token %}
-        {{ form }}
-        <input type="submit" value="Submit">
+    <form id="login_form" method="post">
+        <input name="username">
+        <input name="password">
+        <input type="submit" value="Sign In">
+        <small id="error"></small>
     </form>
-    <small>{{ error }}</small>
 </div>
 </body>
 </html>

@@ -4,17 +4,17 @@ from django.core.exceptions import ObjectDoesNotExist
 from application.models import *
 
 
-class CheckpointManager:
+class KitLicensePlateManager:
     def __init__(self):
-        self.checkpoint = None
+        self.kit = None
 
-    def get_checkpoints(self, user: User):
-        checkpoint_list = []
-        for checkpoint in user.checkpoints:
-            checkpoint_list.append(self.serialize(checkpoint))
-        return checkpoint_list
+    def get_kits(self, user: User):
+        kit_list = []
+        for kit in user.kits:
+            kit_list.append(self.serialize(kit))
+        return kit_list
 
-    def get_checkpoint_by_name(self, name, user: User):
+    def get_kit_by_name(self, name, user: User):
         """
         :param name:
         :param user:
@@ -22,81 +22,85 @@ class CheckpointManager:
         :return:
         """
         try:
-            return Checkpoint.objects.get(name=name, user=user)
+            return Kit.objects.get(name=name, user=user)
         except ObjectDoesNotExist:
-            raise Exception('Checkpoint does not exists')
+            raise ObjectDoesNotExist('Kit does not exists')
 
-    def set_checkpoint(self, checkpoint: Checkpoint):
+    def set_kit(self, kit: Kit):
         """
-        Set checkpoint
-        :param Checkpoint checkpoint:
+        Set kit
+        :param Kit kit:
         :return:
         """
-        self.checkpoint = checkpoint
+        self.kit = kit
 
-    def serialize(self, checkpoint: Checkpoint):
+    def serialize(self, kit: Kit):
         """
         Return dict from object
-        :param checkpoint:Checkpoint
+        :param kit:Kit
         :return:dict|None
         """
-        if isinstance(checkpoint, Checkpoint):
+        if isinstance(kit, Kit):
             return {
-                'name': checkpoint.name,
-                'user': checkpoint.user.username,
-                'active': checkpoint.is_active,
-                'sync_counter': checkpoint.sync_counter,
+                'name': kit.name,
+                'user': kit.user.username,
+                'active': kit.is_active,
+                'sync_counter': kit.sync_counter,
             }
         return
 
-    def create_checkpoint(self, name, user: User):
+    def create_kit(self, name, user: User):
         """
         :param name:
         :param user:
         :except Exception
-        :return Checkpoint:
+        :return Kit:
         """
-        checkpoint = Checkpoint(name=name, user=user)
-        if self.__checkpoint_is_unique(checkpoint, user):
-            checkpoint.save()
-            return checkpoint
-        raise Exception('Checkpoint with this name already exists')
+        kit = Kit(name=name, user=user)
+        if self.__kit_is_unique(kit, user):
+            kit.save()
+            return kit
+        raise ObjectDoesNotExist('Kit with this name already exists')
 
-    @staticmethod
-    def __checkpoint_is_unique(checkpoint: Checkpoint, user: User):
-        if len(Checkpoint.objects.filter(name=checkpoint.name, user=user)) == 0:
+    def __kit_is_unique(self, kit: Kit, user: User):
+        if len(Kit.objects.filter(name=kit.name, user=user)) == 0:
             return True
         return False
 
-    def update_checkpoint(self, name, checkpoint: Checkpoint, user: User):
+    def update_kit(self, name, kit: Kit, user: User):
         """
-        Update name of checkpoint
+        Update name of kit
+        :param user:
         :param name:
-        :param Checkpoint checkpoint:
-        :return Checkpoint|None:
+        :param Kit kit:
+        :return KitLicensePlate|None:
         """
-        checkpoint.name = name
-        if self.__checkpoint_is_unique(checkpoint, user):
-            checkpoint.save()
-            return checkpoint
-        raise Exception('Checkpoint with this name already exists')
+        kit.name = name
+        if self.__kit_is_unique(kit, user):
+            kit.save()
+            return kit
+        raise ObjectDoesNotExist('Kit with this name already exists')
 
-    def activate(self, checkpoint: Checkpoint):
-        checkpoint.set_active()
+    def activate(self, kit: Kit):
+        kit.is_active = True
+        kit.save()
         return True
 
-    def deactivate(self, checkpoint):
-        checkpoint.is_active = False
-        checkpoint.save()
+    def deactivate(self, kit):
+        kit.is_active = False
+        kit.save()
         return True
 
-    def delete_checkpoint(self, checkpoint: Checkpoint):
+    def get_active_kits(self):
+        return Kit.objects.filter(active=True)
+
+    def delete_kit(self, kit: Kit):
         """
-        Delete checkpoint from user
-        :param checkpoint:
+        Delete kit from user
+        :param kit:
         :return bool:
         """
-        checkpoint.delete()
+        kit.delete()
         return True
 
 
@@ -105,28 +109,28 @@ class PlateManager:
         self.plate = None
         self.error = None
 
-    def get_plates(self, checkpoint: Checkpoint):
-        checkpoint_list = []
-        for plate in checkpoint.plates:
-            checkpoint_list.append(self.serialize(plate))
-        return checkpoint_list
+    def get_plates(self, kit: Kit):
+        kit_list = []
+        for plate in kit.plates:
+            kit_list.append(self.serialize(plate))
+        return kit_list
 
-    def get_plate_by_name(self, name, checkpoint: Checkpoint):
+    def get_plate_by_name(self, name, kit: Kit):
         try:
-            return Plate.objects.get(name=name, checkpoint=checkpoint)
+            return Plate.objects.get(name=name, kit=kit)
         except ObjectDoesNotExist:
             raise Exception('Plate does not exists')
 
-    def create_plate(self, name, checkpoint: Checkpoint):
-        plate = Plate(name=name, checkpoint=checkpoint)
-        if self.__plate_is_unique(plate, checkpoint):
+    def create_plate(self, name, kit: Kit):
+        plate = Plate(name=name, kit=kit)
+        if self.__plate_is_unique(plate, kit):
             plate.save()
             return plate
         raise Exception('Plate already exists')
 
-    def update_plate(self, name, plate: Plate, checkpoint: Checkpoint):
+    def update_plate(self, name, plate: Plate, kit: Kit):
         plate.name = name
-        if self.__plate_is_unique(plate, checkpoint):
+        if self.__plate_is_unique(plate, kit):
             plate.save()
             return plate
         raise Exception('Plate with this name already exists')
@@ -135,9 +139,8 @@ class PlateManager:
         plate.delete()
         return True
 
-    @staticmethod
-    def __plate_is_unique(plate: Plate, checkpoint: Checkpoint):
-        if len(Plate.objects.filter(name=plate.name, checkpoint=checkpoint)) == 0:
+    def __plate_is_unique(self, plate: Plate, kit: Kit):
+        if len(Plate.objects.filter(name=plate.name, kit=kit)) == 0:
             return True
         return False
 
@@ -152,7 +155,7 @@ class PlateManager:
         if isinstance(plate, Plate):
             return {
                 'name': plate.name,
-                'checkpoint': plate.checkpoint.name,
+                'kit': plate.kit.name,
             }
         return
 
@@ -174,8 +177,6 @@ class UserManager:
         if isinstance(user, User):
             return {
                 'username': user.username,
-                'is_admin': user.is_admin,
-                'token': user.token,
                 'sync_counter': user.sync_counter,
             }
         return
@@ -197,19 +198,6 @@ class UserManager:
         self.user = request.user
         return self.user
 
-    def get_user_by_token(self, token: str):
-        """
-        Getting user by his token from database
-        :except Exception
-        :param str token:
-        :return User|None:
-        """
-        try:
-            self.user = User.objects.get(token=token)
-            return self.user
-        except ObjectDoesNotExist:
-            raise Exception('User does not exists')
-
     def get_user_by_username_and_password(self, username: str, password: str):
         """
         Get user by his username and password
@@ -222,22 +210,6 @@ class UserManager:
                 username=username,
                 password=password
             )
-            self.user = user
             return user
         except ObjectDoesNotExist:
             return
-
-    def generate_user_token(self, user: User = None):
-        """
-        Generate new token for user
-        :param User user:
-        :return User|None:
-        """
-        if user is None:
-            user = self.user
-        if isinstance(user, User):
-            if user.token is None:
-                user.update_token()
-            self.user = user
-            return user
-        return

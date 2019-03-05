@@ -2,20 +2,24 @@
 <html lang="en">
 <head>
     {% load static %}
-    <script src="{% static 'js/jquery-3.2.1.min.js' %}"></script>
-    <script src="{% static 'js/sender.js' %}"></script>
+    {% include "blocks/head.html" %}
+    <script src="{% static 'js/main/main.js' %}"></script>
     <meta charset="UTF-8">
     <title>Main page</title>
 </head>
 <body>
-<div>
+
+<div class="container">
+    <div class="row">
+        <div class="kits col-sm-12">
+            {% include "blocks/navigation.html" %}
+        </div>
+    </div>
     <h3>{{ checkpoint.name }}</h3>
     <div>
         <img src="/stream/" alt="Camera is not connected">
     </div>
-    <div>
-        <button onclick="window.location.href='/plate'">Add/Remove plates</button>
-    </div>
 </div>
+
 </body>
 </html>

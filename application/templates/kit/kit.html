@@ -2,39 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{kit.name}}</title>
+    <title>Kits</title>
     {% load static %}
     {% include "blocks/head.html" %}
-    <script src="{% static 'js/plate/plate.js' %}"></script>
+    <script src="{% static 'js/kit/kit.js' %}"></script>
 </head>
-<body data-kit-name="{{kit.name}}">
+<body>
 <div class="container">
     <div class="row">
-        <div class="plates col-sm-12">
+        <div class="kits col-sm-12">
             {% include "blocks/navigation.html" %}
         </div>
     </div>
 
     <div class="row">
-        <div class="plates col-sm-5">
+        <div class="kits col-6" style="min-wight: 300px">
             <table class="table">
                 <tr>
                     <th scope="col">Name</th>
+                    <th scope="col">Active</th>
+                    <th scope="col"></th>
                     <th scope="col"></th>
                     <th scope="col"></th>
                 </tr>
-                {% for plate in plate_list %}
+                {% for kit in kit_list %}
                 <tr class="table-row">
-                    <td>{{plate.name}}</td>
+                    <td>{{kit.name}}</td>
+                    <td>{{kit.active}}</td>
+                    <td>
+                        <a href="/kit/{{kit.name}}/" class="btn btn-info">
+                            Show
+                        </a>
+                    </td>
                     <td>
                         <button class="edit_button btn btn-warning"
-                                data-name="{{plate.name}}"
+                                data-name="{{kit.name}}"
+                                data-active="{{kit.active}}"
                         >Edit
                         </button>
                     </td>
                     <td>
                         <button class="delete_button btn btn-danger"
-                                data-name="{{plate.name}}"
+                                data-name="{{kit.name}}"
                         >Delete
                         </button>
                     </td>
@@ -42,22 +51,30 @@
                 {% endfor%}
             </table>
         </div>
-        <div class="create-plate col-sm-6 ml-5">
-            <h4>Create new licence plate:</h4>
+        <div class="create-kit col-6  ml-5" style="min-wight: 300px">
+            <h4>Create new kit:</h4>
             <form id="create_form">
                 <label>
                     Name:
-                    <input name="plate_name">
+                    <input name="kit_name">
+                </label>
+                <label>
+                    Active:
+                    <input type="checkbox" name="kit_active">
                 </label>
                 <button type="submit" class="btn btn-primary">Create</button>
             </form>
         </div>
-        <div class="edit-plate col-sm-6 ml-5">
-            <h4>Edit <span id="name_of_editing_plate"></span>:</h4>
+        <div class="edit-kit col-6  ml-5" style="min-wight: 300px">
+            <h4>Edit <span id="name_of_editing_kit"></span>:</h4>
             <form id="edit_form">
                 <label>
                     Name:
-                    <input id="edit_form_plate_name" name="plate_name" value="">
+                    <input id="edit_form_kit_name" name="kit_name" value="">
+                </label>
+                <label>
+                    Active:
+                    <input id="edit_form_kit_active" type="checkbox" name="kit_active">
                 </label>
                 <button type="submit" class="btn btn-primary">Save</button>
                 <button class="btn btn-danger" id="cancel_edition">Cancel</button>
