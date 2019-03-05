@@ -213,3 +213,24 @@ class UserManager:
             return user
         except ObjectDoesNotExist:
             return
+
+
+class HistoryManagers:
+
+    def add(self, plate: Plate):
+        history = History(plate=plate, plate_name=plate.name)
+        history.save()
+
+    def show_all(self):
+        return History.objects.all()
+
+    def show_history_of_plate(self, plate):
+        ok = False
+        if isinstance(plate, Plate):
+            ok = True
+        if isinstance(plate, str):
+            plate = Plate.objects.get(name=plate)
+            ok = True
+        if ok:
+            return History.objects.filter(plate=plate)
+        return None
