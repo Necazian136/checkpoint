@@ -52,5 +52,6 @@ class Plate(models.Model):
 
 class History(models.Model):
     plate_name = models.CharField(max_length=15, null=False)
-    plate = models.ForeignKey(Plate, on_delete=models.SET_NULL, null=False)
+    plate = models.ForeignKey(Plate, on_delete=models.SET_NULL, null=True)
+    has_passed = models.BooleanField()
     date = models.DateTimeField(auto_now_add=True)

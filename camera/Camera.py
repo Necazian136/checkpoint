@@ -1,6 +1,6 @@
 import time
 import cv2
-from application.src.managers import KitLicensePlateManager
+from application.src.managers import KitLicensePlateManager, HistoryManagers
 from camera import recognition
 import RPi.GPIO as GPIO
 
@@ -10,6 +10,7 @@ class Camera:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(7, GPIO.OUT)
         self.kit_manager = KitLicensePlateManager()
+        self.history_manager = HistoryManagers()
         self.cap = cv2.VideoCapture(0)
         self.delay = 15
         self.frame = None
@@ -29,6 +30,8 @@ class Camera:
                     if self.frame:
                         r, self.buf = cv2.imencode(".jpg", self.frame)
                         cv2.imwrite(self.file_path, self.frame)
+                        if self.recognize():
+                            self.open_gate()
             finally:
                 pass
 
@@ -38,7 +41,13 @@ class Camera:
         for kit in kits:
             for plate in kit.plates:
                 if plate in recognized_plates:
+                    self.history_manager.add(plate, True)
                     return True
+        if len(recognized_plates) > 0:
+            serialized_plates = ''
+            for plate in recognized_plates:
+                serialized_plates += plate + ', '
+            self.history_manager.add(serialized_plates.rstrip(), False)
         return False
 
     def open_gate(self):

@@ -8,16 +8,18 @@
     <title>Main page</title>
 </head>
 <body>
-
+<h3>{{ checkpoint.name }}</h3>
 <div class="container">
     <div class="row">
         <div class="kits col-sm-12">
             {% include "blocks/navigation.html" %}
-        </div>
+            <div>
+        <img src="/stream/" alt="Camera is not connected">
     </div>
-    <h3>{{ checkpoint.name }}</h3>
     <div>
         <img src="/stream/" alt="Camera is not connected">
+    </div>
+        </div>
     </div>
 </div>
 

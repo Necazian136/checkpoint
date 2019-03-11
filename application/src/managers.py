@@ -217,9 +217,15 @@ class UserManager:
 
 class HistoryManagers:
 
-    def add(self, plate: Plate):
-        history = History(plate=plate, plate_name=plate.name)
+    def add(self, plate, has_passed):
+        if isinstance(plate, Plate):
+            history = History(plate=plate, plate_name=plate.name, has_passed=has_passed)
+        elif isinstance(plate, str):
+            history = History(plate=None, plate_name=plate, has_passed=has_passed)
+        else:
+            return False
         history.save()
+        return True
 
     def show_all(self):
         return History.objects.all()
