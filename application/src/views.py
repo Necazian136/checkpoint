@@ -12,10 +12,11 @@ class MainView(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.kit_manager = KitLicensePlateManager()
+        self.history_manager = HistoryManager()
 
     def get(self, request):
         if request.user is not None and request.user.is_active:
-            return render(request, "main/main.html")
+            return render(request, "main/main.html", {'history': self.history_manager.get_all()})
         return redirect('login/')
 
 

@@ -215,7 +215,7 @@ class UserManager:
             return
 
 
-class HistoryManagers:
+class HistoryManager:
 
     def add(self, plate, has_passed):
         if isinstance(plate, Plate):
@@ -227,8 +227,24 @@ class HistoryManagers:
         history.save()
         return True
 
-    def show_all(self):
-        return History.objects.all()
+    def get_all(self):
+        history = []
+        for row in History.objects.all():
+            history.append(self.serialize(row))
+
+    def serialize(self, history: History):
+        """
+        Return dict from object
+        :param History history:
+        :return dict|None:
+        """
+
+        if isinstance(history, History):
+            return {
+                'plate': history.plate_name,
+                'date': history.date
+            }
+        return
 
     def show_history_of_plate(self, plate):
         ok = False

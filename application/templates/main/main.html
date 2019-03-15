@@ -11,14 +11,29 @@
 <h3>{{ checkpoint.name }}</h3>
 <div class="container">
     <div class="row">
-        <div class="kits col-sm-12">
+        <div class="kits col-sm">
             {% include "blocks/navigation.html" %}
-            <div>
-        <img src="/stream/" alt="Camera is not connected">
+        </div>
     </div>
-    <div>
-        <img src="/stream/" alt="Camera is not connected">
-    </div>
+    <div class="row">
+        <div class="kits col-sm-6 mt-3">
+            <h3>Camera: </h3>
+            <img src="/stream/" alt="Camera is not connected">
+        </div>
+        <div class="kits col-sm-6 mt-3">
+            <h3>History: </h3>
+            <table class="table">
+                <tr>
+                    <th scope="col">Plate</th>
+                    <th scope="col">Date</th>
+                </tr>
+                {% for row in history %}
+                <tr>
+                    <td>{{row.plate}}</td>
+                    <td>{{row.date}}</td>
+                </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-# Kit
+# Checkpoint
 
 ### Installation
 
