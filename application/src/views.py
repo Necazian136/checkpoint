@@ -17,7 +17,7 @@ class MainView(View):
     def get(self, request):
         if request.user is not None and request.user.is_active:
             return render(request, "main/main.html", {'history': self.history_manager.get_all()})
-        return redirect('login/')
+        return redirect('/login/')
 
 
 class KitView(View):
@@ -31,7 +31,7 @@ class KitView(View):
         if request.user is not None and request.user.is_active:
             kit_list = self.kit_manager.get_kits(request.user)
             return render(request, "kit/kit.html", {'kit_list': kit_list})
-        return redirect('login/')
+        return redirect('/login/')
 
 
 class PlateView(View):
@@ -62,6 +62,7 @@ class PlateView(View):
                     return render(request, "plate/plate.html", {'kit': kit, 'plate_list': plates})
         except Exception:
             return redirect("/kit/")
+        return redirect('/login/')
 
 
 class StreamView(View):
@@ -110,4 +111,4 @@ class UserAuthorizationView(View):
     @staticmethod
     def logout(request):
         logout(request)
-        return redirect('/login')
+        return redirect('/login/')

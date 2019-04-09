@@ -2,13 +2,13 @@ import time
 import cv2
 from application.src.managers import KitLicensePlateManager, HistoryManager
 from camera import recognition
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 
 
 class Camera:
     def __init__(self):
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(7, GPIO.OUT)
+        #GPIO.setmode(GPIO.BCM)
+        #GPIO.setup(7, GPIO.OUT)
         self.kit_manager = KitLicensePlateManager()
         self.history_manager = HistoryManager()
         self.cap = cv2.VideoCapture(0)
@@ -46,9 +46,10 @@ class Camera:
         return False
 
     def open_gate(self):
-        GPIO.output(7, True)
+        #GPIO.output(7, True)
         time.sleep(self.delay)
-        GPIO.output(7, False)
+        #GPIO.output(7, False)
 
     def __del__(self):
-        GPIO.cleanup()
+        pass
+        # GPIO.cleanup()
