@@ -1,10 +1,11 @@
 from django.contrib.auth import logout
-from django.http import StreamingHttpResponse, HttpResponseServerError
+from django.http import StreamingHttpResponse, HttpResponseServerError, HttpResponse
 from django.shortcuts import render, redirect
+from django.utils.archive import extract
 from django.views.generic import View
 
 from application.src.managers import *
-from checkpoint.wsgi import camera
+import time
 
 
 class MainView(View):
@@ -44,11 +45,7 @@ class PlateView(View):
 
     def get(self, request, **kwargs):
         try:
-            if (
-                    request.user.is_authenticated and
-                    request.user is not None and
-                    request.user.is_active
-            ):
+            if (request.user.is_authenticated and request.user is not None and request.user.is_active):
                 user = request.user
 
                 kit = None
@@ -69,31 +66,29 @@ class StreamView(View):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        from checkpoint.wsgi import camera
+        self.camera = camera
 
     def gen(self):
-        import time
-
         while True:
             time.sleep(0.2)
-            buf = camera.buf
+            buf = self.camera.buf
 
             if buf is not None:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + bytearray(buf) + b'\r\n\r\n')
-            return None
+            yield None
 
     def get(self, request):
-
         if request.user is not None and request.user.is_active:
             try:
-                stream_view = StreamView()
-                if camera.buf is not None:
-                    return StreamingHttpResponse(
-                        stream_view.gen(),
-                        status=206,
-                        content_type="multipart/x-mixed-replace;boundary=frame")
-            finally:
-                return HttpResponseServerError()
+                if self.camera.is_active or self.camera.restart():
+                    return StreamingHttpResponse(self.gen(), status=206,
+                                                 content_type="multipart/x-mixed-replace;boundary=frame")
+
+            except Exception as e:
+                pass
+            return HttpResponse(self.camera.get_image_not_found(), content_type="image/jpeg")
         return redirect('/login')
 
 

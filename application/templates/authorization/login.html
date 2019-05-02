@@ -2,31 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SignIn</title>
+    <title>Log in</title>
     {% load static %}
     {% include "blocks/head.html" %}
     <script src="{% static 'js/authorization/login.js' %}"></script>
-
+    <link rel="stylesheet" href="{% static 'css/authorization/login.css' %}">
 </head>
 <body>
 <div>
-    <form id="login_form" method="post">
-        <div class="form-row align-items-center">
-            <div class="col-sm-3 my-1">
-                <label class="sr-only" for="username">Name</label>
-                <input type="text" class="form-control" id="username" placeholder="Username">
+    <div class="login-form">
+        <form id="login_form" method="post">
+            <h2 class="text-center">Log in</h2>
+            <div class="form-group">
+                <input type="text" class="form-control" name="username" placeholder="Username" required="required">
             </div>
-            <div class="col-sm-3 my-1">
-                <label class="sr-only" for="password">Name</label>
-                <input type="password" class="form-control" id="password" placeholder="Password">
+            <div class="form-group">
+                <input type="password" class="form-control" name="password" placeholder="Password" required="required">
             </div>
-            <div class="col-auto my-1">
-                <button type="submit" class="btn btn-primary">Submit</button>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
             </div>
-            <div id="error" class="alert-danger">
-            </div>
-        </div>
-    </form>
+            <small id="error" class="alert-danger">
+            </small>
+        </form>
+    </div>
 </div>
 </body>
 </html>

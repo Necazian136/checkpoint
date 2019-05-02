@@ -1,6 +1,5 @@
 $(document).ready(function () {
     const USER_URL = '/api/user/';
-    var error = $('#error');
 
     $('#login_form').on('submit', function(e){
         e.preventDefault();
@@ -12,11 +11,10 @@ $(document).ready(function () {
     });
 
     function getResult(callback){
-        console.log(callback);
         if (callback.result && !callback.error) {
             window.location.replace('/');
         } else {
-            error.innerHTML = callback.error;
+            $('#error').html(callback.error);
         }
     }
 });

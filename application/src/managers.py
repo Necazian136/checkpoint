@@ -92,7 +92,7 @@ class KitLicensePlateManager:
         return True
 
     def get_active_kits(self):
-        return Kit.objects.filter(active=True)
+        return Kit.objects.filter(is_active=True)
 
     def delete_kit(self, kit: Kit):
         """

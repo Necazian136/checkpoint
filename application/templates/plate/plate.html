@@ -6,17 +6,18 @@
     {% load static %}
     {% include "blocks/head.html" %}
     <script src="{% static 'js/plate/plate.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/plate/plate.css' %}">
 </head>
 <body data-kit-name="{{kit.name}}">
 <div class="container">
     <div class="row">
-        <div class="plates col-sm-12">
+        <div class="kits col-sm">
             {% include "blocks/navigation.html" %}
         </div>
     </div>
 
     <div class="row">
-        <div class="plates col-sm-5">
+        <div class="plates label col-sm-5">
             <table class="table">
                 <tr>
                     <th scope="col">Name</th>
