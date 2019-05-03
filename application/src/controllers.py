@@ -1,7 +1,6 @@
 from json import JSONDecodeError
 
 from django.contrib.auth import login
-from django.http import QueryDict
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
@@ -106,7 +105,7 @@ class PlateController(View):
             plate = None
             plate_name = None
             try:
-                patch = json.loads(request.body)
+                patch = json.loads(request.body.decode('utf-8'))
             except JSONDecodeError:
                 patch = None
 
@@ -263,7 +262,7 @@ class KitController(View):
             kit = None
             kit_name = None
             try:
-                patch = json.loads(request.body)
+                patch = json.loads(request.body.decode('utf-8'))
             except JSONDecodeError:
                 patch = None
 
@@ -359,7 +358,7 @@ class UserController(View):
 
         try:
             try:
-                post = json.loads(request.body)
+                post = json.loads(request.body.decode('utf-8'))
             except JSONDecodeError:
                 post = None
             username = None

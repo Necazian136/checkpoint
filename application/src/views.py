@@ -1,7 +1,6 @@
 from django.contrib.auth import logout
-from django.http import StreamingHttpResponse, HttpResponseServerError, HttpResponse
+from django.http import StreamingHttpResponse, HttpResponse
 from django.shortcuts import render, redirect
-from django.utils.archive import extract
 from django.views.generic import View
 
 from application.src.managers import *
