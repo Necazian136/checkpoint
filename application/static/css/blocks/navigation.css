@@ -1,0 +1,13 @@
+.navigation
+{
+    position: relative;
+    background-color: #e3f2fd;
+    border-radius: 0 0 15px 15px;
+    animation:go_down 3s ease-out forwards;
+}
+
+@keyframes go_down
+{
+    from {top: -60px; opacity: 0;}
+    to {top:0px; opacity: 1}
+}

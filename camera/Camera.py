@@ -3,6 +3,7 @@ import cv2
 from application.src.managers import KitLicensePlateManager, HistoryManager
 from camera import recognition
 import threading
+from checkpoint.settings import BASE_DIR
 # import RPi.GPIO as GPIO
 
 
@@ -53,7 +54,7 @@ class Camera:
 
 
     def get_image_not_found(self):
-        file = open('application/static/images/image-not-found.png', 'rb')
+        file = open(BASE_DIR + '/application/static/images/image-not-found.png', 'rb')
         bytes = file.read()
         file.close()
         return bytes
