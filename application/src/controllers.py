@@ -376,7 +376,7 @@ class UserController(View):
                     password=password
                 )
                 if user is None:
-                    raise ObjectDoesNotExist('User does not exists')
+                    raise ObjectDoesNotExist('Incorrect credentials')
                 login(request, user)
             result = self.user_manager.serialize(user)
             if result is None:
